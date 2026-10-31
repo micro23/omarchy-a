@@ -5,14 +5,40 @@ import QtQuick
 // panel, the external monitor shifts to x=0, and long-lived surfaces such as
 // the bar and background keep rendering at the old offset — or entirely
 // off-screen — until they are unmapped and remapped. Watch the screen's
-// origin and pulse `remapping` when it moves; the owning window folds that
-// into its `visible` binding so the compositor re-places the surface at the
+// origin and pulse remapping when it moves; the owning window folds that
+// into its visible binding so the compositor re-places the surface at the
 // monitor's new origin.
 Item {
   id: root
 
   required property var window
   readonly property var screen: window ? window.screen : null
+
+  // ShellScreen's x, y, width and height share geometryChanged. A size-only
+  // rotation therefore also invokes onXChanged/onYChanged. Compare the actual
+  // origin before remapping, or a quarter-turn destroys the native panels.
+  property var observedScreen: null
+  property int observedX: 0
+  property int observedY: 0
+
+  function checkOrigin() {
+    var current = root.screen
+    if (!current) { root.observedScreen = null; return }
+    var x = current.x
+    var y = current.y
+    if (current !== root.observedScreen) {
+      root.observedScreen = current
+      root.observedX = x
+      root.observedY = y
+      return
+    }
+    if (x === root.observedX && y === root.observedY) return
+    root.observedX = x
+    root.observedY = y
+    settleTimer.restart()
+  }
+  onScreenChanged: checkOrigin()
+  Component.onCompleted: checkOrigin()
 
   // Fold into the window's binding: visible: <shown> && !guard.remapping
   property bool remapping: false
@@ -37,7 +63,7 @@ Item {
 
   Connections {
     target: root.screen
-    function onXChanged() { settleTimer.restart() }
-    function onYChanged() { settleTimer.restart() }
+    function onXChanged() { root.checkOrigin() }
+    function onYChanged() { root.checkOrigin() }
   }
 }
