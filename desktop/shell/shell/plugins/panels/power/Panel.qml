@@ -15,7 +15,7 @@ Panel {
   // permits — needed for the togglePercentage method below.
   manageIpc: false
   property var batteryInfo: ({})
-  readonly property bool externalPower: batteryInfo.external_power === "connected"
+  readonly property var externalPower: Model.externalPowerPresence(batteryInfo.external_power)
   property var profiles: []
   property string activeProfile: ""
   property int profileIndex: 0
