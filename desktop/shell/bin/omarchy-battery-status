@@ -35,6 +35,13 @@ if [[ -r $battery/energy_full ]]; then
   if [[ $full =~ ^[0-9]+$ && $full -gt 0 ]]; then
     awk -v uwh="$full" 'BEGIN { printf "size\t%.1fWh\n", uwh / 1000000 }'
   fi
+elif [[ -r $battery/charge_full ]]; then
+  # A charge-only gauge reports microamp-hours, not energy. Preserve that unit
+  # instead of inventing a nominal voltage for a Wh conversion.
+  read -r full < "$battery/charge_full"
+  if [[ $full =~ ^[0-9]+$ && $full -gt 0 ]]; then
+    awk -v uah="$full" 'BEGIN { printf "size\t%.0fmAh\n", uah / 1000 }'
+  fi
 fi
 if [[ -r $battery/cycle_count ]]; then
   read -r cycles < "$battery/cycle_count"
