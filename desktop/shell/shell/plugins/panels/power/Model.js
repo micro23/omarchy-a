@@ -66,6 +66,12 @@ function chargeThresholdActive(device, onBattery, states) {
   return !!(device && device.isPresent && device.chargeThresholdActive === true)
 }
 
+function externalPowerPresence(raw) {
+  if (raw === "connected") return true
+  if (raw === "disconnected") return false
+  return undefined
+}
+
 function batteryIcon(device, onBattery, states, externalPower) {
   var d = device || {}
   if (!d.isPresent) return ""
@@ -124,6 +130,7 @@ if (typeof module !== "undefined") {
     batteryFraction: batteryFraction,
     chargeThresholdActive: chargeThresholdActive,
     batteryIcon: batteryIcon,
+    externalPowerPresence: externalPowerPresence,
     modeLabel: modeLabel,
     profileLabel: profileLabel,
     localizeReading: localizeReading
